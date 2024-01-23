@@ -111,7 +111,7 @@ function(mason_use _PACKAGE)
                 get_filename_component(_CACHE_DIR "${_CACHE_PATH}" DIRECTORY)
                 file(MAKE_DIRECTORY "${_CACHE_DIR}")
                 execute_process(
-                    COMMAND curl --retry 3 -s -f -S -L --insecure "${_URL}" -o "${_CACHE_PATH}.tmp"
+                    COMMAND curl --retry 3 -s -f -S -L --ssl-no-revoke "${_URL}" -o "${_CACHE_PATH}.tmp"
                     RESULT_VARIABLE _FAILED
                     ERROR_VARIABLE _ERROR)
                 if(_FAILED)
