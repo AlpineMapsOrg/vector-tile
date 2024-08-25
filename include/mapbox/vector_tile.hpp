@@ -427,7 +427,7 @@ inline layer::layer(protozero::data_view const& layer_view) :
             {
                 // We want to keep the keys in the order of the vector tile
                 // https://github.com/mapbox/mapbox-gl-native/pull/5183
-                auto iter = keysMap.emplace(layer_pbf.get_string(), keys.size());
+                auto iter = keysMap.emplace(layer_pbf.get_string(), uint32_t(keys.size()));
                 keys.emplace_back(std::reference_wrapper<const std::string>(iter->first));
             }
             break;
