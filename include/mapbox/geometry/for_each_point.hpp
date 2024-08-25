@@ -21,20 +21,14 @@ template <typename Container, typename F>
 auto for_each_point(Container&& container, F&& f)
     -> decltype(container.begin(), container.end(), void());
 
-template <typename... Types, typename F>
-void for_each_point(mapbox::util::variant<Types...> const& geom, F&& f)
+template <typename... Types, typename F> void for_each_point(std::variant<Types...> const& geom, F&& f)
 {
-    mapbox::util::variant<Types...>::visit(geom, [&](auto const& g) {
-        for_each_point(g, f);
-    });
+    std::variant<Types...>::visit(geom, [&](auto const& g) { for_each_point(g, f); });
 }
 
-template <typename... Types, typename F>
-void for_each_point(mapbox::util::variant<Types...>& geom, F&& f)
+template <typename... Types, typename F> void for_each_point(std::variant<Types...>& geom, F&& f)
 {
-    mapbox::util::variant<Types...>::visit(geom, [&](auto& g) {
-        for_each_point(g, f);
-    });
+    std::variant<Types...>::visit(geom, [&](auto& g) { for_each_point(g, f); });
 }
 
 template <typename Container, typename F>

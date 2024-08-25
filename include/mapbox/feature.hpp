@@ -1,13 +1,13 @@
 #pragma once
 
-#include <mapbox/geometry.hpp>
-
-#include <mapbox/variant.hpp>
-
 #include <cstdint>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <variant>
+#include <vector>
+
+#include <mapbox/geometry.hpp>
+#include <mapbox/recursive_wrapper.hpp>
 
 namespace mapbox {
 namespace feature {
@@ -29,9 +29,8 @@ constexpr null_value_t null_value = null_value_t();
 // Implementations that produce `value`s should use that order for type preference,
 // using uint64_t for positive integers, int64_t for negative integers, and double
 // for non-integers and integers outside the range of 64 bits.
-using value_base = mapbox::util::variant<null_value_t, bool, uint64_t, int64_t, double, std::string,
-                                         mapbox::util::recursive_wrapper<std::vector<value>>,
-                                         mapbox::util::recursive_wrapper<std::unordered_map<std::string, value>>>;
+using value_base = std::variant<null_value_t, bool, uint64_t, int64_t, double, std::string, mapbox::util::recursive_wrapper<std::vector<value>>,
+    mapbox::util::recursive_wrapper<std::unordered_map<std::string, value>>>;
 
 struct value : value_base
 {
@@ -41,11 +40,14 @@ struct value : value_base
 using property_map = std::unordered_map<std::string, value>;
 
 // The same considerations and requirement for numeric types apply as for `value_base`.
-using identifier = mapbox::util::variant<null_value_t, uint64_t, int64_t, double, std::string>;
+using identifier = std::variant<null_value_t, uint64_t, int64_t, double>;
 
-template <class T>
-struct feature
-{
+// Warning:
+// This class seems to be unused. Adam remved std::string from identifier because it was causing a compiler error.
+// in vector_tile the usage seemed ok. Adam doesn't understand this class, and how it's used, hence he didn't check
+// the usage. So if you start using the class, verify that identifier doesn't need a string (not even in the future),
+// and if it does, make it compile somehow.
+template <class T> struct [[deprecated("Class seems unusued, read the warning in the comment when starting to use.")]] feature {
     using coordinate_type = T;
     using geometry_type = mapbox::geometry::geometry<T>; // Fully qualified to avoid GCC -fpermissive error.
 
