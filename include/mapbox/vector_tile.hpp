@@ -22,6 +22,7 @@ class points_array_type_float : public std::vector<point_type_float> {
 public:
     using coordinate_type = point_type_float::coordinate_type;
     static inline bool check_limits = false;
+    static inline bool round = false;
     template <class... Args>
     points_array_type_float(Args&&... args)
         : std::vector<point_type_float>(std::forward<Args>(args)...)
@@ -33,6 +34,7 @@ class points_arrays_type_float : public std::vector<points_array_type_float> {
 public:
     using coordinate_type = points_array_type_float::coordinate_type;
     static inline bool check_limits = false;
+    static inline bool round = false;
     template <class... Args>
     points_arrays_type_float(Args&&... args)
         : std::vector<points_array_type_float>(std::forward<Args>(args)...)
@@ -44,6 +46,7 @@ class points_array_type : public std::vector<point_type> {
 public:
     using coordinate_type = point_type::coordinate_type;
     static inline bool check_limits = true;
+    static inline bool round = true;
     template <class... Args>
     points_array_type(Args&&... args) : std::vector<point_type>(std::forward<Args>(args)...) {}
 };
@@ -52,6 +55,7 @@ class points_arrays_type : public std::vector<points_array_type> {
 public:
     using coordinate_type = points_array_type::coordinate_type;
     static inline bool check_limits = true;
+    static inline bool round = true;
     template <class... Args>
     points_arrays_type(Args&&... args) : std::vector<points_array_type>(std::forward<Args>(args)...) {}
 };
@@ -60,6 +64,7 @@ class points_array_type32 : public std::vector<point_type32> {
 public:
     using coordinate_type = point_type::coordinate_type;
     static inline bool check_limits = true;
+    static inline bool round = true;
     template <class... Args>
     points_array_type32(Args&&... args)
         : std::vector<point_type>(std::forward<Args>(args)...)
@@ -369,8 +374,15 @@ GeometryCollectionType feature::getGeometries(float scale) const {
 
             x += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
             y += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
-            float px = ::roundf(static_cast<float>(x) * scale);
-            float py = ::roundf(static_cast<float>(y) * scale);
+            float px, py;
+            if (GeometryCollectionType::round) {
+                px = ::roundf(static_cast<float>(x) * scale);
+                py = ::roundf(static_cast<float>(y) * scale);
+            } else {
+                px = static_cast<float>(x) * scale;
+                py = static_cast<float>(y) * scale;
+            }
+
             if (GeometryCollectionType::check_limits) {
                 static const float max_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max());
                 static const float min_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min());
