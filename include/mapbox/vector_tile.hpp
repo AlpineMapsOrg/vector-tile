@@ -15,10 +15,35 @@
 namespace mapbox { namespace vector_tile {
 
 using point_type = mapbox::geometry::point<std::int16_t>;
+using point_type32 = mapbox::geometry::point<std::int32_t>;
+using point_type_float = mapbox::geometry::point<float>;
+
+class points_array_type_float : public std::vector<point_type_float> {
+public:
+    using coordinate_type = point_type_float::coordinate_type;
+    static inline bool check_limits = false;
+    template <class... Args>
+    points_array_type_float(Args&&... args)
+        : std::vector<point_type_float>(std::forward<Args>(args)...)
+    {
+    }
+};
+
+class points_arrays_type_float : public std::vector<points_array_type_float> {
+public:
+    using coordinate_type = points_array_type_float::coordinate_type;
+    static inline bool check_limits = false;
+    template <class... Args>
+    points_arrays_type_float(Args&&... args)
+        : std::vector<points_array_type_float>(std::forward<Args>(args)...)
+    {
+    }
+};
 
 class points_array_type : public std::vector<point_type> {
 public:
     using coordinate_type = point_type::coordinate_type;
+    static inline bool check_limits = true;
     template <class... Args>
     points_array_type(Args&&... args) : std::vector<point_type>(std::forward<Args>(args)...) {}
 };
@@ -26,8 +51,31 @@ public:
 class points_arrays_type : public std::vector<points_array_type> {
 public:
     using coordinate_type = points_array_type::coordinate_type;
+    static inline bool check_limits = true;
     template <class... Args>
     points_arrays_type(Args&&... args) : std::vector<points_array_type>(std::forward<Args>(args)...) {}
+};
+
+class points_array_type32 : public std::vector<point_type32> {
+public:
+    using coordinate_type = point_type::coordinate_type;
+    static inline bool check_limits = true;
+    template <class... Args>
+    points_array_type32(Args&&... args)
+        : std::vector<point_type>(std::forward<Args>(args)...)
+    {
+    }
+};
+
+class points_arrays_type32 : public std::vector<points_array_type32> {
+public:
+    using coordinate_type = points_array_type32::coordinate_type;
+    static inline bool check_limits = true;
+    template <class... Args>
+    points_arrays_type32(Args&&... args)
+        : std::vector<points_array_type32>(std::forward<Args>(args)...)
+    {
+    }
 };
 
 class layer;
@@ -323,20 +371,17 @@ GeometryCollectionType feature::getGeometries(float scale) const {
             y += protozero::decode_zigzag32(static_cast<std::uint32_t>(*start_itr++));
             float px = ::roundf(static_cast<float>(x) * scale);
             float py = ::roundf(static_cast<float>(y) * scale);
-            static const float max_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max());
-            static const float min_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min());
+            if (GeometryCollectionType::check_limits) {
+                static const float max_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::max());
+                static const float min_coord = static_cast<float>(std::numeric_limits<typename GeometryCollectionType::coordinate_type>::min());
 
-            if (px > max_coord ||
-                px < min_coord ||
-                py > max_coord ||
-                py < min_coord
-                ) {
-                throw std::runtime_error("paths outside valid range of coordinate_type");
-            } else {
-                paths.back().emplace_back(
-                    static_cast<typename GeometryCollectionType::coordinate_type>(px),
-                    static_cast<typename GeometryCollectionType::coordinate_type>(py));
+                if (px > max_coord || px < min_coord || py > max_coord || py < min_coord) {
+                    throw std::runtime_error("paths outside valid range of coordinate_type");
+                }
             }
+
+            paths.back().emplace_back(static_cast<typename GeometryCollectionType::coordinate_type>(px), static_cast<typename GeometryCollectionType::coordinate_type>(py));
+
         } else if (cmd == CommandType::CLOSE) {
             if (!paths.back().empty()) {
                 paths.back().push_back(paths.back()[0]);
